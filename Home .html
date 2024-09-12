@@ -1,0 +1,581 @@
+<html><head><base href="https://websim.io/"><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Aplicativo de Calendário das Fases da Lua</title><style>
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        background-color: #000000;
+        color: #ffffff;
+        margin: 0;
+        padding: 20px;
+    }
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .month-nav {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .month {
+        font-size: 18px;
+        font-weight: bold;
+    }
+    .nav-arrow {
+        cursor: pointer;
+        font-size: 20px;
+    }
+    .nav-arrow.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .current-moon-phase {
+        font-size: 14px;
+        text-align: right;
+    }
+    .calendar {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 10px;
+        margin-bottom: 30px;
+    }
+    .day {
+        text-align: center;
+        font-size: 14px;
+        padding: 10px 0;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 70px; /* Increase the height to create more space */
+    }
+    .moon {
+        width: 20px;
+        height: 20px;
+        margin: 10px auto 0; /* Increase top margin to push it down */
+        background-color: transparent;
+        border: 1px solid #ffffff;
+        border-radius: 50%;
+        position: relative;
+        overflow: hidden;
+    }
+    .moon::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ffffff;
+        border-radius: 50%;
+    }
+    .new-moon::after { transform: scale(0); }
+    .waxing-crescent::after { clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%, 50% 0, 75% 0, 75% 100%, 50% 100%); }
+    .first-quarter::after { clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%); }
+    .waxing-gibbous::after { clip-path: polygon(25% 0, 100% 0, 100% 100%, 25% 100%, 25% 0, 50% 0, 50% 100%, 25% 100%); }
+    .full-moon::after { transform: scale(1); }
+    .waning-gibbous::after { clip-path: polygon(0 0, 75% 0, 75% 100%, 0 100%, 0 0, 50% 0, 50% 100%, 0 100%); }
+    .last-quarter::after { clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%); }
+    .waning-crescent::after { clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%, 0 0, 25% 0, 25% 100%, 0 100%); }
+    .tools {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 30px;
+    }
+    .tool {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .tool-icon {
+        width: 50px;
+        height: 50px;
+        background-color: #4cd964;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 5px;
+        color: white;
+        font-size: 24px;
+    }
+    .tool-name {
+        font-size: 12px;
+        margin-top: 5px;
+    }
+    .diary {
+        background-color: #1c1c1e;
+        padding: 20px;
+        border-radius: 15px;
+    }
+    .diary-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .diary-title {
+        font-size: 18px;
+        font-weight: bold;
+    }
+    .diary-date {
+        font-size: 14px;
+        color: #8e8e93;
+    }
+    .diary p {
+        background-color: transparent;
+        padding: 0;
+        margin-top: 10px;
+        font-size: 16px;
+    }
+    .nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: #1c1c1e;
+        display: flex;
+        justify-content: space-around;
+        padding: 15px 0;
+    }
+    .nav-item {
+        color: #8e8e93;
+        font-size: 14px;
+        text-align: center;
+    }
+    .nav-item.active {
+        color: #4cd964;
+    }
+    .toggle-week {
+        cursor: pointer;
+        font-size: 20px;
+        margin-left: 10px;
+    }
+    .task-details {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #1c1c1e;
+        z-index: 1000;
+        padding: 30px 20px;
+        display: none;
+        border-radius: 20px 20px 0 0;
+    }
+    .task-details-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+    .close-button, .save-button {
+        color: #4cd964;
+        font-size: 18px;
+        cursor: pointer;
+    }
+    .task-form {
+        padding: 20px;
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        color: #8e8e93;
+    }
+    .form-group input[type="text"],
+    .form-group input[type="date"],
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 10px;
+        background-color: #2c2c2e;
+        border: none;
+        border-radius: 8px;
+        color: #ffffff;
+        font-size: 16px;
+    }
+    .form-group select[multiple] {
+        height: 100px;
+    }
+    .form-group textarea {
+        height: 100px;
+        resize: vertical;
+    }
+    .form-group input[type="checkbox"] {
+        margin-right: 10px;
+    }
+    .current-day {
+        position: absolute;
+        top: 25%;  /* Modified to move it up further */
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 40px;  /* Increased from 38px to 40px to make the circle slightly larger */
+        height: 40px;  /* Increased from 38px to 40px to make the circle slightly larger */
+        background-color: transparent;
+        border: 2px solid #4cd964;
+        border-radius: 50%;
+        z-index: -1;
+    }
+    .day.selected {
+        background-color: rgba(0, 122, 255, 0.2); /* Light blue background */
+        border-radius: 50%;
+    }
+</style></head><body>
+    <div class="header">
+        <div class="month-nav">
+            <span class="nav-arrow" id="prevMonth">&#9664;</span>
+            <div class="month">SETEMBRO</div>
+            <span class="nav-arrow" id="nextMonth">&#9654;</span>
+            <span class="toggle-week" id="toggleWeek">&#9650;</span>
+        </div>
+        <div class="current-moon-phase">LUA ATUAL</div>
+    </div>
+    
+    <div class="calendar" id="calendar"></div>
+    
+    <div class="tools">
+        <div class="tool">
+            <div class="tool-icon">✓</div>
+            <div class="tool-name">Tarefa</div>
+        </div>
+        <div class="tool">
+            <div class="tool-icon">📷</div>
+            <div class="tool-name">Foto</div>
+        </div>
+        <div class="tool">
+            <div class="tool-icon">🌱</div>
+            <div class="tool-name">Registro da planta</div>
+        </div>
+        <div class="tool">
+            <div class="tool-icon">📝</div>
+            <div class="tool-name">Registro no ambiente</div>
+        </div>
+        <div class="tool">
+            <div class="tool-icon">•••</div>
+            <div class="tool-name">Mais</div>
+        </div>
+    </div>
+    
+    <div class="diary">
+        <div class="diary-header">
+            <div class="diary-title">DIÁRIO</div>
+            <div class="diary-date">hoje</div>
+        </div>
+        <p>NADA PARA HOJE</p>
+    </div>
+    
+    <nav class="nav">
+        <div class="nav-item active">Início</div>
+        <div class="nav-item">🌱</div>
+        <div class="nav-item">🌙</div>
+        <div class="nav-item">🖼️</div>
+        <div class="nav-item">👤</div>
+    </nav>
+
+<div class="task-details" id="taskDetails">
+    <div class="task-details-header">
+        <span class="close-button" id="closeTaskDetails">Cancelar</span>
+        <span class="save-button">Salvar</span>
+    </div>
+    <div class="task-form">
+        <div class="form-group">
+            <label for="taskTitle">Título</label>
+            <input type="text" id="taskTitle" placeholder="Digite o título da tarefa">
+        </div>
+        <div class="form-group">
+            <label for="plantSelect">Selecione as Plantas</label>
+            <select id="plantSelect" multiple>
+                <option value="plant1">Planta 1</option>
+                <option value="plant2">Planta 2</option>
+                <option value="plant3">Planta 3</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="taskType">Tipo de Tarefa</label>
+            <select id="taskType">
+                <option value="agua">Água</option>
+                <option value="nutrientes">Nutrientes</option>
+                <option value="repelente">Repelente</option>
+                <option value="transplante">Transplante</option>
+                <option value="poda">Poda</option>
+                <option value="colheita">Colheita</option>
+                <option value="flush">Flush</option>
+                <option value="outro">Outro</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="taskDate">Data</label>
+            <input type="date" id="taskDate">
+        </div>
+        <div class="form-group">
+            <label for="taskDescription">Descrição</label>
+            <textarea id="taskDescription" placeholder="Digite a descrição da tarefa"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="taskRecurrence">Recorrência</label>
+            <select id="taskRecurrence">
+                <option value="none">Nenhuma</option>
+                <option value="daily">Diária</option>
+                <option value="weekly">Semanal</option>
+                <option value="monthly">Mensal</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="taskNotification">Adicionar Notificação</label>
+            <input type="checkbox" id="taskNotification">
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', (event) => {
+    let selectedDate = new Date();
+    let tasks = {};
+    const timeElement = document.createElement('div');
+    timeElement.style.position = 'absolute';
+    timeElement.style.top = '10px';
+    timeElement.style.left = '10px';
+    timeElement.style.fontSize = '14px';
+    document.body.appendChild(timeElement);
+
+    function updateTime() {
+        const now = new Date();
+        timeElement.textContent = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    updateTime();
+    setInterval(updateTime, 1000);
+
+    const moonPhases = [
+        'new-moon', 'waxing-crescent', 'waxing-crescent', 'waxing-crescent', 'waxing-crescent',
+        'first-quarter', 'waxing-gibbous', 'waxing-gibbous', 'waxing-gibbous', 'waxing-gibbous',
+        'full-moon', 'waning-gibbous', 'waning-gibbous', 'waning-gibbous', 'waning-gibbous',
+        'last-quarter', 'waning-crescent', 'waning-crescent', 'waning-crescent', 'waning-crescent',
+        'new-moon', 'waxing-crescent', 'waxing-crescent', 'waxing-crescent', 'waxing-crescent',
+        'first-quarter', 'waxing-gibbous', 'waxing-gibbous', 'waxing-gibbous', 'waxing-gibbous'
+    ];
+
+    let currentDate = new Date();
+    let currentMonth = currentDate.getMonth();
+    let currentYear = currentDate.getFullYear();
+    let showOnlyCurrentWeek = false;
+
+    function populateCalendar(month, year) {
+        const calendar = document.getElementById('calendar');
+        calendar.innerHTML = '';
+
+        const daysInWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+        daysInWeek.forEach(day => {
+            const dayElement = document.createElement('div');
+            dayElement.className = 'day';
+            dayElement.textContent = day;
+            calendar.appendChild(dayElement);
+        });
+
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const firstDay = new Date(year, month, 1).getDay();
+
+        for (let i = 0; i < firstDay; i++) {
+            calendar.appendChild(document.createElement('div'));
+        }
+
+        const today = new Date();
+        const currentWeekStart = new Date(today.getFullYear(), today.getMonth(), today.getDate() - today.getDay());
+        const currentWeekEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate() - today.getDay() + 6);
+
+        for (let i = 1; i <= daysInMonth; i++) {
+            const dayElement = document.createElement('div');
+            dayElement.className = 'day';
+            const moonPhase = moonPhases[(i - 1) % moonPhases.length];
+            
+            const date = new Date(year, month, i);
+            const isCurrentWeek = date >= currentWeekStart && date <= currentWeekEnd;
+            
+            if (!showOnlyCurrentWeek || isCurrentWeek) {
+                const numberDiv = document.createElement('div');
+                numberDiv.textContent = i.toString().padStart(2, '0');
+                
+                dayElement.innerHTML = `
+                    ${numberDiv.outerHTML}
+                    <div class="moon ${moonPhase}"></div>
+                `;
+                
+                if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                    const currentDayMarker = document.createElement('div');
+                    currentDayMarker.className = 'current-day';
+                    dayElement.insertBefore(currentDayMarker, dayElement.firstChild);
+                }
+                
+                dayElement.addEventListener('click', () => {
+                    selectedDate = new Date(year, month, i);
+                    updateSelectedDay();
+                });
+                
+                calendar.appendChild(dayElement);
+            }
+        }
+
+        const months = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
+        document.querySelector('.month').textContent = months[month];
+
+        const moonPhaseNames = ['Lua Nova', 'Lua Crescente', 'Quarto Crescente', 'Lua Gibosa Crescente', 'Lua Cheia', 'Lua Gibosa Minguante', 'Quarto Minguante', 'Lua Minguante'];
+        const currentDay = new Date().getDate();
+        const currentMoonPhase = moonPhaseNames[Math.floor((currentDay / 30) * 8) % 8];
+        document.querySelector('.current-moon-phase').textContent = currentMoonPhase.toUpperCase();
+        
+        updateSelectedDay();
+    }
+
+    function updateSelectedDay() {
+        const days = document.querySelectorAll('.day');
+        days.forEach(day => {
+            day.classList.remove('selected');
+        });
+        
+        // Check if the selected date is in the current month view
+        if (currentMonth === selectedDate.getMonth() && currentYear === selectedDate.getFullYear()) {
+            const selectedDay = Array.from(days).find(day => {
+                const dayNumber = parseInt(day.querySelector('div')?.textContent);
+                return dayNumber === selectedDate.getDate();
+            });
+            
+            if (selectedDay) {
+                selectedDay.classList.add('selected');
+            }
+        }
+
+        updateDiary(); // Add this line
+    }
+
+    function saveTask() {
+        const taskTitle = document.getElementById('taskTitle').value;
+        const taskPlants = Array.from(document.getElementById('plantSelect').selectedOptions).map(option => option.value);
+        const taskType = document.getElementById('taskType').value;
+        const taskDate = selectedDate.toISOString().split('T')[0]; // Use selectedDate instead of input value
+        const taskDescription = document.getElementById('taskDescription').value;
+        const taskRecurrence = document.getElementById('taskRecurrence').value;
+        const taskNotification = document.getElementById('taskNotification').checked;
+
+        const task = {
+            title: taskTitle,
+            plants: taskPlants,
+            type: taskType,
+            date: taskDate,
+            description: taskDescription,
+            recurrence: taskRecurrence,
+            notification: taskNotification
+        };
+
+        if (!tasks[taskDate]) {
+            tasks[taskDate] = [];
+        }
+        tasks[taskDate].push(task);
+
+        updateDiary();
+        document.getElementById('taskDetails').style.display = 'none';
+    }
+
+    function updateDiary() {
+        const diaryContent = document.querySelector('.diary p');
+        const selectedDateString = selectedDate.toISOString().split('T')[0];
+        const tasksForSelectedDate = tasks[selectedDateString] || [];
+
+        if (tasksForSelectedDate.length > 0) {
+            let content = '';
+            tasksForSelectedDate.forEach(task => {
+                content += `<strong>${task.title}</strong> - ${task.type}<br>`;
+                content += `${task.description}<br><br>`;
+            });
+            diaryContent.innerHTML = content;
+        } else {
+            diaryContent.textContent = 'NADA PARA HOJE';
+        }
+
+        document.querySelector('.diary-date').textContent = selectedDate.toLocaleDateString('pt-BR');
+    }
+
+    populateCalendar(currentMonth, currentYear);
+
+    const prevMonth = document.getElementById('prevMonth');
+    const nextMonth = document.getElementById('nextMonth');
+
+    function toggleWeekView() {
+        showOnlyCurrentWeek = !showOnlyCurrentWeek;
+        document.getElementById('toggleWeek').innerHTML = showOnlyCurrentWeek ? '&#9660;' : '&#9650;';
+        
+        // Disable/enable month navigation arrows
+        if (showOnlyCurrentWeek) {
+            prevMonth.classList.add('disabled');
+            nextMonth.classList.add('disabled');
+        } else {
+            prevMonth.classList.remove('disabled');
+            nextMonth.classList.remove('disabled');
+        }
+        
+        populateCalendar(currentMonth, currentYear);
+    }
+
+    document.getElementById('toggleWeek').addEventListener('click', toggleWeekView);
+
+    prevMonth.addEventListener('click', () => {
+        if (!showOnlyCurrentWeek) {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            populateCalendar(currentMonth, currentYear);
+            updateSelectedDay();
+        }
+    });
+
+    nextMonth.addEventListener('click', () => {
+        if (!showOnlyCurrentWeek) {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            populateCalendar(currentMonth, currentYear);
+            updateSelectedDay();
+        }
+    });
+
+    document.querySelector('.tool:first-child').addEventListener('click', showTaskDetails);
+
+    function showTaskDetails() {
+        document.getElementById('taskDetails').style.display = 'block';
+        document.getElementById('taskDate').valueAsDate = selectedDate;
+    }
+
+    document.getElementById('closeTaskDetails').addEventListener('click', hideTaskDetails);
+
+    function hideTaskDetails() {
+        document.getElementById('taskDetails').style.display = 'none';
+        // Clear form fields
+        document.getElementById('taskTitle').value = '';
+        document.getElementById('plantSelect').selectedIndex = -1;
+        document.getElementById('taskType').selectedIndex = 0;
+        document.getElementById('taskDescription').value = '';
+        document.getElementById('taskRecurrence').selectedIndex = 0;
+        document.getElementById('taskNotification').checked = false;
+    }
+
+    document.querySelector('.save-button').addEventListener('click', saveTask);
+
+    setInterval(() => {
+        const now = new Date();
+        if (now.getMonth() !== currentMonth || now.getFullYear() !== currentYear) {
+            currentMonth = now.getMonth();
+            currentYear = now.getFullYear();
+        }
+        populateCalendar(currentMonth, currentYear);
+    }, 60000);
+
+    updateDiary();
+});
+</script>
+</body></html>

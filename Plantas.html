@@ -1,0 +1,313 @@
+<html><head><base href="https://websimulationcreationengine.com/cannabis-grow-tracker/new-plant/">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add New Plant - Cannabis Grow Tracker</title>
+<style>
+  body, html {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background-color: #121212;
+    color: #ffffff;
+  }
+  .top-bar {
+    background-color: #1E1E1E;
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .back-button, .next-button, .add-photo-button {
+    background: none;
+    border: none;
+    color: #4CAF50;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  .next-button {
+    opacity: 0.5;
+  }
+  .content {
+    padding: 20px;
+    position: relative;
+  }
+  .photo-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 200px;
+    background-size: cover;
+    background-position: center;
+    opacity: 0.5;
+  }
+  .title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    position: relative;
+  }
+  .subtitle {
+    color: #888;
+    font-size: 16px;
+    margin-bottom: 20px;
+    position: relative;
+  }
+  .form-group {
+    margin-bottom: 20px;
+  }
+  .form-label {
+    display: block;
+    margin-bottom: 5px;
+    color: #4CAF50;
+  }
+  select, input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    background-color: #2C2C2C;
+    border: none;
+    border-radius: 5px;
+    color: #ffffff;
+    font-size: 16px;
+  }
+  .checkbox-container {
+    display: flex;
+    align-items: center;
+  }
+  .checkbox-container input[type="checkbox"] {
+    margin-right: 10px;
+  }
+  .growth-stages {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+  }
+  .stage {
+    text-align: center;
+    opacity: 0.5;
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+  }
+  .stage.active {
+    opacity: 1;
+  }
+  .stage-icon {
+    font-size: 24px;
+    margin-bottom: 5px;
+  }
+  .stage-name {
+    font-size: 12px;
+  }
+  .stage-date {
+    font-size: 10px;
+    color: #4CAF50;
+    height: 12px;
+  }
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+  }
+  .modal-content {
+    background-color: #2C2C2C;
+    margin: 50% auto;
+    padding: 20px;
+    border-radius: 10px;
+    width: 80%;
+  }
+  .modal-option {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #3C3C3C;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    text-align: center;
+    cursor: pointer;
+  }
+  .radio-group {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+  }
+  .radio-option {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    background-color: #2C2C2C;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  .radio-option.selected {
+    background-color: #4CAF50;
+  }
+</style>
+</head>
+<body>
+  <div class="top-bar">
+    <button class="back-button">← ANTERIOR</button>
+    <button class="add-photo-button">Adicionar uma foto</button>
+    <button class="next-button">PRÓXIMO →</button>
+  </div>
+
+  <div class="content">
+    <div class="photo-background"></div>
+    <div class="title">Crie uma planta nova</div>
+    <div class="subtitle">Genética desconhecida</div>
+
+    <div class="form-group">
+      <label class="form-label">Começando de</label>
+      <div class="radio-group" id="startingFrom">
+        <div class="radio-option selected" data-value="Semente">Semente</div>
+        <div class="radio-option" data-value="Clone">Clone</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Defina sua genética</label>
+      <input type="text" id="genetics" placeholder="Pesquisa genética">
+    </div>
+
+    <div class="form-group">
+      <div class="checkbox-container">
+        <input type="checkbox" id="unknownGenetics" checked>
+        <label for="unknownGenetics">Genética desconhecida</label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Nome da planta</label>
+      <input type="text" id="plantName" placeholder="Digite o nome da sua planta">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Defina seu estágio</label>
+      <div class="growth-stages">
+        <div class="stage" data-stage="germination">
+          <div class="stage-icon">🌱</div>
+          <div class="stage-name">Germinação</div>
+          <div class="stage-date"></div>
+        </div>
+        <div class="stage" data-stage="seedling">
+          <div class="stage-icon">🍃</div>
+          <div class="stage-name">Plantinha</div>
+          <div class="stage-date"></div>
+        </div>
+        <div class="stage" data-stage="vegetative">
+          <div class="stage-icon">🌿</div>
+          <div class="stage-name">Vegetativo</div>
+          <div class="stage-date"></div>
+        </div>
+        <div class="stage" data-stage="flowering">
+          <div class="stage-icon">🌺</div>
+          <div class="stage-name">Floração</div>
+          <div class="stage-date"></div>
+        </div>
+        <div class="stage" data-stage="drying">
+          <div class="stage-icon">🥀</div>
+          <div class="stage-name">Secagem</div>
+          <div class="stage-date"></div>
+        </div>
+        <div class="stage" data-stage="curing">
+          <div class="stage-icon">🍇</div>
+          <div class="stage-name">Cura</div>
+          <div class="stage-date"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="photoModal" class="modal">
+    <div class="modal-content">
+      <button class="modal-option" id="takePhoto">Tirar foto</button>
+      <button class="modal-option" id="selectExisting">Selecionar existente</button>
+      <button class="modal-option" id="cancelPhoto">Cancelar</button>
+    </div>
+  </div>
+
+  <script>
+    document.querySelector('.back-button').addEventListener('click', function() {
+      history.back();
+    });
+
+    document.querySelector('.next-button').addEventListener('click', function() {
+      alert('Next step functionality to be implemented');
+    });
+
+    document.getElementById('unknownGenetics').addEventListener('change', function() {
+      const geneticsInput = document.getElementById('genetics');
+      geneticsInput.disabled = this.checked;
+      geneticsInput.style.opacity = this.checked ? '0.5' : '1';
+    });
+
+    function formatDate(date) {
+      return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+    }
+
+    document.querySelectorAll('.stage').forEach(stage => {
+      stage.addEventListener('click', function() {
+        document.querySelectorAll('.stage').forEach(s => {
+          s.classList.remove('active');
+          s.querySelector('.stage-date').textContent = '';
+        });
+        this.classList.add('active');
+        const currentDate = new Date();
+        this.querySelector('.stage-date').textContent = formatDate(currentDate);
+      });
+    });
+
+    const firstStage = document.querySelector('.stage[data-stage="germination"]');
+    firstStage.classList.add('active');
+    firstStage.querySelector('.stage-date').textContent = formatDate(new Date());
+
+    const modal = document.getElementById('photoModal');
+    const addPhotoButton = document.querySelector('.add-photo-button');
+    const cancelPhotoButton = document.getElementById('cancelPhoto');
+
+    addPhotoButton.addEventListener('click', function() {
+      modal.style.display = 'block';
+    });
+
+    cancelPhotoButton.addEventListener('click', function() {
+      modal.style.display = 'none';
+    });
+
+    document.getElementById('takePhoto').addEventListener('click', function() {
+      alert('Camera functionality to be implemented');
+      modal.style.display = 'none';
+    });
+
+    document.getElementById('selectExisting').addEventListener('click', function() {
+      alert('Photo selection functionality to be implemented');
+      modal.style.display = 'none';
+      // Simulating a photo being selected
+      document.querySelector('.photo-background').style.backgroundImage = 'url("https://example.com/placeholder-cannabis-image.jpg")';
+    });
+
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        modal.style.display = 'none';
+      }
+    }
+
+    // Corrected code for the radio button functionality
+    const radioOptions = document.querySelectorAll('.radio-option');
+    radioOptions.forEach(option => {
+      option.addEventListener('click', function() {
+        radioOptions.forEach(opt => opt.classList.remove('selected'));
+        this.classList.add('selected');
+        console.log('Selected option:', this.getAttribute('data-value')); // For debugging
+      });
+    });
+  </script>
+</body>
+</html>
